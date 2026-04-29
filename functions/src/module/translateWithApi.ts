@@ -1,4 +1,4 @@
-import { onCall } from "firebase-functions/v2/https";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
 import responseAppCallable from "@/local/responseAppCallable";
 import { getSecretParams, getSecretString } from "@/local/secret-manager";
 import { COMMON_CALLABLE_REGION } from "~/features/schema/AppCallableScheme";
@@ -9,7 +9,10 @@ export default onCall(
     secrets: getSecretParams("DEEPL_API_KEY")
   },
   req =>
-    responseAppCallable<"translateWithApi">(req, async ({ data }) => {
+    responseAppCallable<"translateWithApi">(req, async ({ data, auth }) => {
+      if (!auth) {
+        throw new HttpsError("unauthenticated", "Authentication required");
+      }
       const { jaWord } = data;
       const DEEPL_API_KEY = getSecretString("DEEPL_API_KEY");
       const res = await fetch("https://api-free.deepl.com/v2/translate", {
