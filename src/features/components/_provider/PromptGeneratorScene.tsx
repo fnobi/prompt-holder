@@ -46,8 +46,6 @@ const PromptGeneratorScene = () => {
 
   const [activeTab, setActiveTab] = useState(SUBJECT_TAB_ID);
   const [subjectInput, setSubjectInput] = useState("");
-  const [copied, setCopied] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [translating, setTranslating] = useState(false);
   const [translateError, setTranslateError] = useState("");
   const [popupOpen, setPopupOpen] = useState(false);
@@ -70,7 +68,6 @@ const PromptGeneratorScene = () => {
   const clearAll = useCallback(() => {
     clearAllStore();
     setSubjectInput("");
-    setCopied(false);
   }, [clearAllStore]);
 
   const handleAddSubject = useCallback(async () => {
@@ -103,16 +100,6 @@ const PromptGeneratorScene = () => {
 
   const prompt = buildPrompt({ subjectItems, subjectSelectedIds, selectedIds });
 
-  const handleCopy = useCallback(() => {
-    if (!prompt) {
-      return;
-    }
-    navigator.clipboard.writeText(prompt).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }, [prompt]);
-
   const handleSave = useCallback(async () => {
     if (!myId || !prompt) {
       return;
@@ -124,8 +111,6 @@ const PromptGeneratorScene = () => {
         createdAt: Date.now()
       }
     });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
   }, [myId, prompt, selectedIds, subjectItems, subjectSelectedIds]);
 
   const selectedCount = selectedIds.length + subjectSelectedIds.length;
@@ -175,13 +160,10 @@ const PromptGeneratorScene = () => {
         <PromptOutputPopup
           prompt={prompt}
           selectedCount={selectedCount}
-          copied={copied}
-          saved={saved}
           canSave={!!myId}
-          onClose={() => setPopupOpen(false)}
-          onCopy={handleCopy}
-          onSave={handleSave}
+          saveHandler={handleSave}
           onClear={clearAll}
+          onClose={() => setPopupOpen(false)}
         />
       )}
     </PromptGeneratorLayout>

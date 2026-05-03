@@ -11,6 +11,7 @@ import MyPromptListPage, {
 } from "~/features/components/my-prompt/MyPromptListPage";
 import { myPromptDataStoreScheme } from "~/features/schema/app-data-store-scheme";
 import type MyPromptItem from "~/features/schema/MyPromptItem";
+import LoadingScene from "~/features/components/LoadingScene";
 
 const myPromptDataStore = new ClientDataStoreAgent(myPromptDataStoreScheme);
 
@@ -19,7 +20,7 @@ const LIST_QUERY: QueryFormula<MyPromptItem>[] = [
 ];
 
 const MyPromptScene = () => {
-  const { myId } = useAuthorizedUser();
+  const { isAuthLoading, myId } = useAuthorizedUser();
   const params = useMemo(() => (myId ? { userId: myId } : null), [myId]);
   const handleError = useCallback(
     (e: FirebaseErrorParameter) => console.error(e),
@@ -41,6 +42,10 @@ const MyPromptScene = () => {
     },
     [myId]
   );
+
+  if (isAuthLoading) {
+    return <LoadingScene />;
+  }
 
   if (!myId) {
     return <MyPromptLoginRequired />;

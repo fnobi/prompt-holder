@@ -1,3 +1,4 @@
+import { useCallback, useState } from "react";
 import styled from "@emotion/styled";
 import { buttonReset, px } from "~/common/lib/css-util";
 import {
@@ -105,71 +106,94 @@ const SaveButton = styled.button<{ saved: boolean }>(
 type PromptOutputPopupProps = {
   prompt: string;
   selectedCount: number;
-  copied: boolean;
-  saved: boolean;
   canSave: boolean;
   onClose: () => void;
-  onCopy: () => void;
-  onSave: () => void;
+  saveHandler: () => Promise<void>;
   onClear: () => void;
 };
 
 const PromptOutputPopup = ({
   prompt,
   selectedCount,
-  copied,
-  saved,
   canSave,
   onClose,
-  onCopy,
-  onSave,
+  saveHandler,
   onClear
-}: PromptOutputPopupProps) => (
-  <Overlay onClick={onClose}>
-    <PopupPanel onClick={e => e.stopPropagation()}>
-      <PopupHeader>
-        <PopupTitle>
-          生成プロンプト
-          {selectedCount > 0 && `　${selectedCount} 件選択中`}
-        </PopupTitle>
-        <PopupClose onClick={onClose} type="button" aria-label="閉じる">
-          ×
-        </PopupClose>
-      </PopupHeader>
+}: PromptOutputPopupProps) => {
+  const [copied, setCopied] = useState(false);
+  const [saved, setSaved] = useState(false);
 
-      <OutputText>
-        {prompt || (
-          <EmptyOutput>
-            カテゴリからオプションを選ぶと、ここにプロンプトが表示されます。
-          </EmptyOutput>
-        )}
-      </OutputText>
+  const handleCopy = useCallback(() => {
+    if (!prompt) {
+      return;
+    }
+    navigator.clipboard.writeText(prompt).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [prompt]);
 
-      <CopyButton
-        copied={copied}
-        onClick={onCopy}
-        disabled={!prompt}
-        type="button"
-      >
-        {copied ? "コピーしました ✓" : "クリップボードにコピー"}
-      </CopyButton>
+  const handleSave = useCallback(async () => {
+    if (!prompt || saved) {
+      return;
+    }
+    await saveHandler();
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }, [saveHandler, prompt, saved]);
 
-      {canSave && (
-        <SaveButton
-          saved={saved}
-          onClick={onSave}
-          disabled={!prompt || saved}
+  const handleClear = useCallback(() => {
+    onClear();
+    setCopied(false);
+  }, [onClear]);
+
+  return (
+    <Overlay onClick={onClose}>
+      <PopupPanel onClick={e => e.stopPropagation()}>
+        <PopupHeader>
+          <PopupTitle>
+            生成プロンプト
+            {selectedCount > 0 && `　${selectedCount} 件選択中`}
+          </PopupTitle>
+          <PopupClose onClick={onClose} type="button" aria-label="閉じる">
+            ×
+          </PopupClose>
+        </PopupHeader>
+
+        <OutputText>
+          {prompt || (
+            <EmptyOutput>
+              カテゴリからオプションを選ぶと、ここにプロンプトが表示されます。
+            </EmptyOutput>
+          )}
+        </OutputText>
+
+        <CopyButton
+          copied={copied}
+          onClick={handleCopy}
+          disabled={!prompt}
           type="button"
         >
-          {saved ? "保存しました ✓" : "お気に入りに保存"}
-        </SaveButton>
-      )}
+          {copied ? "コピーしました ✓" : "クリップボードにコピー"}
+        </CopyButton>
 
-      <ClearButton onClick={onClear} type="button">
-        すべてクリア
-      </ClearButton>
-    </PopupPanel>
-  </Overlay>
-);
+        {canSave && (
+          <SaveButton
+            saved={saved}
+            onClick={handleSave}
+            disabled={!prompt || saved}
+            type="button"
+          >
+            {saved ? "保存しました ✓" : "お気に入りに保存"}
+          </SaveButton>
+        )}
+
+        <ClearButton onClick={handleClear} type="button">
+          すべてクリア
+        </ClearButton>
+      </PopupPanel>
+    </Overlay>
+  );
+};
 
 export default PromptOutputPopup;
