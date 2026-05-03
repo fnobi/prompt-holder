@@ -1,4 +1,4 @@
-import PromptGeneratorScene from "~/features/components/PromptGeneratorScene";
+import PromptGeneratorScene from "~/features/components/_provider/PromptGeneratorScene";
 
 const PagePromptGenerator = () => <PromptGeneratorScene />;
 

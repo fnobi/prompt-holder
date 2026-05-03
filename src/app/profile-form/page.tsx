@@ -1,6 +1,6 @@
 import { makeSubPageMetadata } from "~/features/lib/defaultMetadata";
 import { PAGE_TOP } from "~/features/lib/page-path";
-import ProfileFormScene from "~/features/components/ProfileFormScene";
+import ProfileFormScene from "~/features/components/_provider/ProfileFormScene";
 
 export const metadata = makeSubPageMetadata({
   page: PAGE_TOP,

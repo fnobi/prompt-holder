@@ -1,20 +1,15 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import styled from "@emotion/styled";
 import { useRouter } from "next/navigation";
-import { ClientDataStoreAgent } from "~/common/lib/ClientDataStoreAgent";
 import { buttonReset, px } from "~/common/lib/css-util";
-import { useDataStoreList } from "~/common/lib/database-common-hooks";
-import { useAuthorizedUser } from "~/common/lib/firebase-auth-tools";
-import type FirebaseErrorParameter from "~/common/schema/FirebaseErrorParameter";
-import { type QueryFormula } from "~/common/lib/DataStoreAgent";
+import { type TypedCollectionList } from "~/common/lib/DataStoreAgent";
 import { TITLE_BAR_HEIGHT } from "~/features/components/LayoutRoot";
 import { THEME_COLOR } from "~/features/lib/emotion-mixin";
-import PROMPT_CATEGORIES from "~/features/lib/promptData";
 import { PAGE_TOP } from "~/features/lib/page-path";
+import PROMPT_CATEGORIES from "~/features/lib/promptData";
 import usePromptStore from "~/features/lib/promptStore";
-import { myPromptDataStoreScheme } from "~/features/schema/app-data-store-scheme";
 import type MyPromptItem from "~/features/schema/MyPromptItem";
 import type PromptState from "~/features/schema/PromptState";
 
@@ -125,11 +120,11 @@ const LoginMessage = styled.div({
   color: THEME_COLOR.TEXT_SUB_80
 });
 
-const myPromptDataStore = new ClientDataStoreAgent(myPromptDataStoreScheme);
-
-const LIST_QUERY: QueryFormula<MyPromptItem>[] = [["orderBy", "createdAt", "desc"]];
-
-const buildJapaneseLabels = ({ subjectItems, subjectSelectedIds, selectedIds }: PromptState): string[] => {
+const buildJapaneseLabels = ({
+  subjectItems,
+  subjectSelectedIds,
+  selectedIds
+}: PromptState): string[] => {
   const labels: string[] = [];
   for (const item of subjectItems) {
     if (subjectSelectedIds.includes(item.id)) {
@@ -154,10 +149,10 @@ const formatCreatedAt = (ts: number) => {
 type PromptItemCardProps = {
   id: string;
   data: MyPromptItem;
-  userId: string;
+  onDelete: (id: string) => void;
 };
 
-const PromptItemCard = ({ id, data, userId }: PromptItemCardProps) => {
+const PromptItemCard = ({ id, data, onDelete }: PromptItemCardProps) => {
   const router = useRouter();
   const setSubjectItems = usePromptStore(state => state.setSubjectItems);
   const setSubjectSelectedIds = usePromptStore(
@@ -172,11 +167,17 @@ const PromptItemCard = ({ id, data, userId }: PromptItemCardProps) => {
     setSubjectSelectedIds(data.prompt.subjectSelectedIds);
     setSelectedIds(data.prompt.selectedIds);
     router.push(PAGE_TOP.href);
-  }, [data.prompt, setSubjectItems, setSubjectSelectedIds, setSelectedIds, router]);
+  }, [
+    data.prompt,
+    router,
+    setSelectedIds,
+    setSubjectItems,
+    setSubjectSelectedIds
+  ]);
 
   const handleDelete = useCallback(() => {
-    myPromptDataStore.deleteItem({ userId, promptId: id });
-  }, [id, userId]);
+    onDelete(id);
+  }, [id, onDelete]);
 
   return (
     <PromptCard>
@@ -202,19 +203,12 @@ const PromptItemCard = ({ id, data, userId }: PromptItemCardProps) => {
   );
 };
 
-const ListView = ({ userId }: { userId: string }) => {
-  const params = useMemo(() => ({ userId }), [userId]);
-  const handleError = useCallback(
-    (e: FirebaseErrorParameter) => console.error(e),
-    []
-  );
-  const list = useDataStoreList({
-    dataStore: myPromptDataStore,
-    params,
-    query: LIST_QUERY,
-    onError: handleError
-  });
+type ListViewProps = {
+  list: TypedCollectionList<MyPromptItem> | null;
+  onDelete: (id: string) => void;
+};
 
+const ListView = ({ list, onDelete }: ListViewProps) => {
   if (!list) {
     return <p>読み込み中...</p>;
   }
@@ -225,32 +219,31 @@ const ListView = ({ userId }: { userId: string }) => {
         <EmptyMessage>お気に入りプロンプトはありません。</EmptyMessage>
       ) : (
         list.map(({ id, data }) => (
-          <PromptItemCard key={id} id={id} data={data} userId={userId} />
+          <PromptItemCard key={id} id={id} data={data} onDelete={onDelete} />
         ))
       )}
     </div>
   );
 };
 
-const MyPromptScene = () => {
-  const { myId } = useAuthorizedUser();
+export const MyPromptLoginRequired = () => (
+  <Root>
+    <LoginMessage>この機能を使うにはログインしてください。</LoginMessage>
+  </Root>
+);
 
-  if (!myId) {
-    return (
-      <Root>
-        <LoginMessage>この機能を使うにはログインしてください。</LoginMessage>
-      </Root>
-    );
-  }
-
-  return (
-    <Root>
-      <Inner>
-        <PageTitle>お気に入りのプロンプト</PageTitle>
-        <ListView userId={myId} />
-      </Inner>
-    </Root>
-  );
+type MyPromptListPageProps = {
+  list: TypedCollectionList<MyPromptItem> | null;
+  onDelete: (id: string) => void;
 };
 
-export default MyPromptScene;
+const MyPromptListPage = ({ list, onDelete }: MyPromptListPageProps) => (
+  <Root>
+    <Inner>
+      <PageTitle>お気に入りのプロンプト</PageTitle>
+      <ListView list={list} onDelete={onDelete} />
+    </Inner>
+  </Root>
+);
+
+export default MyPromptListPage;
