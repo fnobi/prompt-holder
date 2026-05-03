@@ -115,7 +115,7 @@ export default [
             allowSameModule: false
           },
           {
-            module: "src/assets",
+            module: "./src/assets",
             allowReferenceFrom: [
               "src/features/!(schema)/**/*",
               "src/app/**/*"
@@ -123,21 +123,18 @@ export default [
             allowSameModule: false
           },
           {
-            module: "src/features/lib/database",
+            module: "./src/common/lib/ClientDataStoreAgent",
             allowReferenceFrom: [
+              "src/common/lib/**/*",
               "src/app/**/*",
-              "src/features/components/**/_provider/*"
+              "src/features/components/**/_provider/**/*"
             ],
-            allowSameModule: true
-          },
-          {
-            module: "src/lib/ClientDataStoreAgent",
-            allowReferenceFrom: ["src/features/lib/database/**/*"],
             allowSameModule: false
           }
         ]
       ],
       "no-undef": 1,
+      "react/self-closing-comp": ["error", { component: true, html: true }],
       "react/no-array-index-key": 0,
       "react/require-default-props": [1, { ignoreFunctionalComponents: true }],
       "react/function-component-definition": [
