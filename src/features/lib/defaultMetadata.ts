@@ -5,8 +5,18 @@ import ASSETS_OGP from "~/assets/meta/ogp.png";
 import ASSETS_ICON from "~/assets/meta/icon_prompt-holder.png";
 
 const DEFAULT_TITLE = "prompt-holder";
-const DEFAULT_DESCRIPTION = "Awsome next.js project.";
-const DEFAULT_KEYWORDS = ["react", "typescript", "next.js"];
+const DEFAULT_DESCRIPTION =
+  "AI画像・動画生成用のプロンプトをカテゴリから選んで組み合わせるプロンプトビルダー。アートスタイル・構図・ライティングなど豊富なプリセットからワンクリックでプロンプトを構築し、お気に入りを保存できます。";
+const DEFAULT_KEYWORDS = [
+  "AIプロンプト",
+  "プロンプトビルダー",
+  "AI画像生成",
+  "画像生成AI",
+  "動画生成",
+  "Stable Diffusion",
+  "Midjourney",
+  "プロンプト作成"
+];
 
 const makePageMetaTitle = (...pageTitle: string[]) =>
   [...pageTitle, DEFAULT_TITLE].join(" | ");
