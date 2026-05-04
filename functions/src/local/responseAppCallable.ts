@@ -2,7 +2,6 @@ import { type CallableRequest } from "firebase-functions/v2/https";
 import { functionRangeLogger } from "@/local/logger";
 import type AppCallableScheme from "~/features/schema/AppCallableScheme";
 import { type CommonNGResponse } from "~/features/schema/AppCallableScheme";
-import { parseString } from "~/common/lib/parser-helper";
 import AppError from "~/features/schema/AppError";
 
 const responseAppCallable = async <T extends keyof AppCallableScheme>(
@@ -13,12 +12,12 @@ const responseAppCallable = async <T extends keyof AppCallableScheme>(
 ): Promise<AppCallableScheme[T]["Response"] | CommonNGResponse> => {
   functionRangeLogger("callable", "begin");
   const res = await handler(req).catch((e): CommonNGResponse => {
-    if (e instanceof AppError) {
-      return { case: "ng", error: e.parameter.type };
-    }
     console.log("[app error]", JSON.stringify(e));
     console.error(e);
-    return { case: "ng", error: parseString(e) };
+    return {
+      case: "ng",
+      error: e instanceof AppError ? e.parameter : { type: "unknown" }
+    };
   });
   functionRangeLogger("callable", "end");
   return res;
