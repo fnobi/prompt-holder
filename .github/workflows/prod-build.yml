@@ -45,6 +45,9 @@ jobs:
       - name: install functions dependencies
         run: pnpm install --prefix functions
 
+      - name: lint
+        run: npx eslint --ext .ts,.tsx,.js src
+
       - name: build
         run: ${{ env.ACTIONS_BUILD_COMMAND }}
 

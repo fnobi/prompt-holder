@@ -1,32 +1,21 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import styled from "@emotion/styled";
 import { useRouter } from "next/navigation";
-import { ClientDataStoreAgent } from "~/common/lib/ClientDataStoreAgent";
-import { buttonReset, px, alphaColor } from "~/common/lib/css-util";
-import { useDataStoreList } from "~/common/lib/database-common-hooks";
-import { useAuthorizedUser } from "~/common/lib/firebase-auth-tools";
-import type FirebaseErrorParameter from "~/common/schema/FirebaseErrorParameter";
-import { type QueryFormula } from "~/common/lib/DataStoreAgent";
+import { buttonReset, px } from "~/common/lib/css-util";
+import { type TypedCollectionList } from "~/common/lib/DataStoreAgent";
 import { TITLE_BAR_HEIGHT } from "~/features/components/LayoutRoot";
 import { THEME_COLOR } from "~/features/lib/emotion-mixin";
-import PROMPT_CATEGORIES from "~/features/lib/promptData";
 import { PAGE_TOP } from "~/features/lib/page-path";
+import PROMPT_CATEGORIES from "~/features/lib/promptData";
 import usePromptStore from "~/features/lib/promptStore";
-import { myPromptDataStoreScheme } from "~/features/schema/app-data-store-scheme";
 import type MyPromptItem from "~/features/schema/MyPromptItem";
 import type PromptState from "~/features/schema/PromptState";
 
-const ACCENT = "#6366f1";
-const BORDER = "#e2e8f0";
-const BG = "#f8fafc";
-const TEXT_MAIN = "#1e293b";
-const TEXT_SUB = "#64748b";
-
 const Root = styled.div({
   minHeight: "100vh",
-  background: BG,
+  background: THEME_COLOR.BG,
   paddingTop: px(TITLE_BAR_HEIGHT + 24),
   paddingBottom: px(100)
 });
@@ -40,19 +29,19 @@ const Inner = styled.div({
 const PageTitle = styled.h1({
   fontSize: px(18),
   fontWeight: 700,
-  color: TEXT_MAIN,
+  color: THEME_COLOR.TEXT_MAIN,
   marginBottom: px(20)
 });
 
 const EmptyMessage = styled.p({
-  color: TEXT_SUB,
+  color: THEME_COLOR.TEXT_SUB,
   fontSize: px(14),
   fontStyle: "italic"
 });
 
 const PromptCard = styled.div({
-  background: THEME_COLOR.WHITE,
-  border: `1px solid ${BORDER}`,
+  background: THEME_COLOR.SURFACE,
+  border: `1px solid ${THEME_COLOR.BORDER}`,
   borderRadius: px(10),
   padding: px(14, 20),
   marginBottom: px(12)
@@ -67,7 +56,7 @@ const CardHeader = styled.div({
 
 const DateLabel = styled.span({
   fontSize: px(12),
-  color: TEXT_SUB
+  color: THEME_COLOR.TEXT_SUB
 });
 
 const CardActions = styled.div({
@@ -86,14 +75,14 @@ const Tag = styled.span({
   padding: px(3, 8),
   borderRadius: px(20),
   fontSize: px(12),
-  background: "#eef2ff",
-  color: ACCENT,
+  background: THEME_COLOR.TAG_ACCENT_BG,
+  color: THEME_COLOR.ACCENT,
   lineHeight: 1.5
 });
 
 const EmptyTag = styled.span({
   fontSize: px(13),
-  color: TEXT_SUB,
+  color: THEME_COLOR.TEXT_SUB,
   fontStyle: "italic"
 });
 
@@ -102,23 +91,23 @@ const ActionButton = styled.button(buttonReset, {
   padding: px(5, 10),
   borderRadius: px(6),
   fontSize: px(12),
-  border: `1px solid ${BORDER}`,
+  border: `1px solid ${THEME_COLOR.BORDER}`,
   transition: "all 0.15s ease"
 });
 
 const LoadButton = styled(ActionButton)({
-  color: ACCENT,
-  borderColor: ACCENT,
+  color: THEME_COLOR.ACCENT,
+  borderColor: THEME_COLOR.ACCENT,
   "&:hover": {
-    background: "#e0e7ff"
+    background: THEME_COLOR.ACCENT_LIGHT
   }
 });
 
 const DeleteButton = styled(ActionButton)({
-  color: TEXT_SUB,
+  color: THEME_COLOR.TEXT_SUB,
   "&:hover": {
-    borderColor: "#ef4444",
-    color: "#ef4444"
+    borderColor: THEME_COLOR.ERROR,
+    color: THEME_COLOR.ERROR
   }
 });
 
@@ -128,14 +117,14 @@ const LoginMessage = styled.div({
   justifyContent: "center",
   minHeight: px(200),
   fontSize: px(14),
-  color: alphaColor(TEXT_SUB as `#${string}`, 0.8)
+  color: THEME_COLOR.TEXT_SUB_80
 });
 
-const myPromptDataStore = new ClientDataStoreAgent(myPromptDataStoreScheme);
-
-const LIST_QUERY: QueryFormula<MyPromptItem>[] = [["orderBy", "createdAt", "desc"]];
-
-const buildJapaneseLabels = ({ subjectItems, subjectSelectedIds, selectedIds }: PromptState): string[] => {
+const buildJapaneseLabels = ({
+  subjectItems,
+  subjectSelectedIds,
+  selectedIds
+}: PromptState): string[] => {
   const labels: string[] = [];
   for (const item of subjectItems) {
     if (subjectSelectedIds.includes(item.id)) {
@@ -160,10 +149,10 @@ const formatCreatedAt = (ts: number) => {
 type PromptItemCardProps = {
   id: string;
   data: MyPromptItem;
-  userId: string;
+  onDelete: (id: string) => void;
 };
 
-const PromptItemCard = ({ id, data, userId }: PromptItemCardProps) => {
+const PromptItemCard = ({ id, data, onDelete }: PromptItemCardProps) => {
   const router = useRouter();
   const setSubjectItems = usePromptStore(state => state.setSubjectItems);
   const setSubjectSelectedIds = usePromptStore(
@@ -178,11 +167,17 @@ const PromptItemCard = ({ id, data, userId }: PromptItemCardProps) => {
     setSubjectSelectedIds(data.prompt.subjectSelectedIds);
     setSelectedIds(data.prompt.selectedIds);
     router.push(PAGE_TOP.href);
-  }, [data.prompt, setSubjectItems, setSubjectSelectedIds, setSelectedIds, router]);
+  }, [
+    data.prompt,
+    router,
+    setSelectedIds,
+    setSubjectItems,
+    setSubjectSelectedIds
+  ]);
 
   const handleDelete = useCallback(() => {
-    myPromptDataStore.deleteItem({ userId, promptId: id });
-  }, [id, userId]);
+    onDelete(id);
+  }, [id, onDelete]);
 
   return (
     <PromptCard>
@@ -208,19 +203,12 @@ const PromptItemCard = ({ id, data, userId }: PromptItemCardProps) => {
   );
 };
 
-const ListView = ({ userId }: { userId: string }) => {
-  const params = useMemo(() => ({ userId }), [userId]);
-  const handleError = useCallback(
-    (e: FirebaseErrorParameter) => console.error(e),
-    []
-  );
-  const list = useDataStoreList({
-    dataStore: myPromptDataStore,
-    params,
-    query: LIST_QUERY,
-    onError: handleError
-  });
+type ListViewProps = {
+  list: TypedCollectionList<MyPromptItem> | null;
+  onDelete: (id: string) => void;
+};
 
+const ListView = ({ list, onDelete }: ListViewProps) => {
   if (!list) {
     return <p>読み込み中...</p>;
   }
@@ -231,32 +219,31 @@ const ListView = ({ userId }: { userId: string }) => {
         <EmptyMessage>お気に入りプロンプトはありません。</EmptyMessage>
       ) : (
         list.map(({ id, data }) => (
-          <PromptItemCard key={id} id={id} data={data} userId={userId} />
+          <PromptItemCard key={id} id={id} data={data} onDelete={onDelete} />
         ))
       )}
     </div>
   );
 };
 
-const MyPromptScene = () => {
-  const { myId } = useAuthorizedUser();
+export const MyPromptLoginRequired = () => (
+  <Root>
+    <LoginMessage>この機能を使うにはログインしてください。</LoginMessage>
+  </Root>
+);
 
-  if (!myId) {
-    return (
-      <Root>
-        <LoginMessage>この機能を使うにはログインしてください。</LoginMessage>
-      </Root>
-    );
-  }
-
-  return (
-    <Root>
-      <Inner>
-        <PageTitle>お気に入りのプロンプト</PageTitle>
-        <ListView userId={myId} />
-      </Inner>
-    </Root>
-  );
+type MyPromptListPageProps = {
+  list: TypedCollectionList<MyPromptItem> | null;
+  onDelete: (id: string) => void;
 };
 
-export default MyPromptScene;
+const MyPromptListPage = ({ list, onDelete }: MyPromptListPageProps) => (
+  <Root>
+    <Inner>
+      <PageTitle>お気に入りのプロンプト</PageTitle>
+      <ListView list={list} onDelete={onDelete} />
+    </Inner>
+  </Root>
+);
+
+export default MyPromptListPage;

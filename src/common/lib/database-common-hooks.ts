@@ -41,7 +41,7 @@ export const useDataStoreSingleItem = <
     return dataStore.subscribeItem({
       ...params,
       handler: v => {
-        setRemoteValue(v);
+        setRemoteValue(v || null);
         setHasLoaded(true);
       },
       onError: e => onError(extractFirebaseError(e))
@@ -67,7 +67,7 @@ export const useDataStoreList = <
   onError
 }: {
   dataStore: ClientDataStoreAgent<T, D, C>;
-  params: Record<C, string>;
+  params: Record<C, string> | null;
   query?: QueryFormula<T>[];
   onError: (e: FirebaseErrorParameter) => void;
 }) => {
@@ -81,6 +81,9 @@ export const useDataStoreList = <
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setList(null);
+    if (!params) {
+      return () => {};
+    }
     return dataStore.subscribeList({
       ...params,
       query,

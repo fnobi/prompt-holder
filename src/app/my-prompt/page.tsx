@@ -1,6 +1,6 @@
 import { makeSubPageMetadata } from "~/features/lib/defaultMetadata";
 import { PAGE_MY_PROMPT } from "~/features/lib/page-path";
-import MyPromptScene from "~/features/components/MyPromptScene";
+import MyPromptScene from "~/features/components/_provider/MyPromptScene";
 
 export const metadata = makeSubPageMetadata({
   page: PAGE_MY_PROMPT,
