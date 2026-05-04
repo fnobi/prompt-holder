@@ -3,7 +3,7 @@ import { functionRangeLogger } from "@/local/logger";
 import type AppCallableScheme from "~/features/schema/AppCallableScheme";
 import { type CommonNGResponse } from "~/features/schema/AppCallableScheme";
 import { parseString } from "~/common/lib/parser-helper";
-import AppError from "~/common/lib/AppError";
+import AppError from "~/features/schema/AppError";
 
 const responseAppCallable = async <T extends keyof AppCallableScheme>(
   req: CallableRequest<AppCallableScheme[T]["Request"]>,
@@ -14,7 +14,7 @@ const responseAppCallable = async <T extends keyof AppCallableScheme>(
   functionRangeLogger("callable", "begin");
   const res = await handler(req).catch((e): CommonNGResponse => {
     if (e instanceof AppError) {
-      return { case: "ng", error: e.type };
+      return { case: "ng", error: e.parameter.type };
     }
     console.log("[app error]", JSON.stringify(e));
     console.error(e);

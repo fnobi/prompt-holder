@@ -2,7 +2,7 @@ import { onCall } from "firebase-functions/v2/https";
 import responseAppCallable from "@/local/responseAppCallable";
 import { getSecretParams, getSecretString } from "@/local/secret-manager";
 import { COMMON_CALLABLE_REGION } from "~/features/schema/AppCallableScheme";
-import AppError from "~/common/lib/AppError";
+import AppError from "~/features/schema/AppError";
 
 export default onCall(
   {
@@ -12,7 +12,7 @@ export default onCall(
   req =>
     responseAppCallable<"translateWithApi">(req, async ({ data, auth }) => {
       if (!auth) {
-        throw new AppError("unauthorized");
+        throw new AppError({ type: "unauthorized" });
       }
       const { jaWord } = data;
       const DEEPL_API_KEY = getSecretString("DEEPL_API_KEY");
