@@ -1,8 +1,10 @@
+import { type AppErrorParameter } from "~/features/schema/AppErrorParameter";
+
 export const COMMON_CALLABLE_REGION = "asia-northeast1";
 
 export type CommonNGResponse = {
   case: "ng";
-  error: string;
+  error: AppErrorParameter;
 };
 
 export type OKResponse<T> = {
