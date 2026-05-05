@@ -110,7 +110,8 @@ const PromptGeneratorScene = () => {
       userId: myId,
       data: {
         prompt: { subjectItems, subjectSelectedIds, selectedIds },
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        updatedAt: 0
       }
     });
     setMyPromptId(newId);
