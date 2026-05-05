@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import styled from "@emotion/styled";
 import { buttonReset, px } from "~/common/lib/css-util";
 import {
@@ -75,18 +75,21 @@ const ClearButton = styled.button(buttonReset, {
   }
 });
 
-const OverwriteButton = styled.button<{ overwritten: boolean }>(
+const saveButtonBase = [
   buttonReset,
   {
-    width: "100%",
+    flex: 1,
     padding: px(11),
     borderRadius: px(8),
     fontSize: px(14),
     fontWeight: 600,
-    textAlign: "center",
-    marginTop: px(8),
+    textAlign: "center" as const,
     transition: "all 0.15s ease"
-  },
+  }
+];
+
+const OverwriteButton = styled.button<{ overwritten: boolean }>(
+  ...saveButtonBase,
   ({ overwritten }) =>
     overwritten
       ? {
@@ -104,17 +107,7 @@ const OverwriteButton = styled.button<{ overwritten: boolean }>(
 );
 
 const SaveButton = styled.button<{ saved: boolean }>(
-  buttonReset,
-  {
-    width: "100%",
-    padding: px(11),
-    borderRadius: px(8),
-    fontSize: px(14),
-    fontWeight: 600,
-    textAlign: "center",
-    marginTop: px(8),
-    transition: "all 0.15s ease"
-  },
+  ...saveButtonBase,
   ({ saved }) =>
     saved
       ? {
@@ -130,6 +123,22 @@ const SaveButton = styled.button<{ saved: boolean }>(
           "&:disabled": { opacity: 0.5, cursor: "default" }
         }
 );
+
+const SaveButtonRow = styled.div({
+  display: "flex",
+  gap: px(8),
+  marginTop: px(8)
+});
+
+const useTimedFlag = (duration = 2000) => {
+  const [flag, setFlag] = useState(false);
+  useEffect(() => {
+    if (!flag) return;
+    const id = setTimeout(() => setFlag(false), duration);
+    return () => clearTimeout(id);
+  }, [flag, duration]);
+  return [flag, setFlag] as const;
+};
 
 type PromptOutputPopupProps = {
   prompt: string;
@@ -150,42 +159,31 @@ const PromptOutputPopup = ({
   overwriteHandler,
   onClear
 }: PromptOutputPopupProps) => {
-  const [copied, setCopied] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [overwritten, setOverwritten] = useState(false);
+  const [copied, setCopied] = useTimedFlag();
+  const [saved, setSaved] = useTimedFlag();
+  const [overwritten, setOverwritten] = useTimedFlag();
 
   const handleCopy = useCallback(() => {
-    if (!prompt) {
-      return;
-    }
-    navigator.clipboard.writeText(prompt).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }, [prompt]);
+    if (!prompt) return;
+    navigator.clipboard.writeText(prompt).then(() => setCopied(true));
+  }, [prompt, setCopied]);
 
   const handleSave = useCallback(async () => {
-    if (!prompt || saved) {
-      return;
-    }
+    if (!prompt || saved) return;
     await saveHandler();
     setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  }, [saveHandler, prompt, saved]);
+  }, [saveHandler, prompt, saved, setSaved]);
 
   const handleOverwrite = useCallback(async () => {
-    if (!prompt || overwritten || !overwriteHandler) {
-      return;
-    }
+    if (!prompt || overwritten || !overwriteHandler) return;
     await overwriteHandler();
     setOverwritten(true);
-    setTimeout(() => setOverwritten(false), 2000);
-  }, [overwriteHandler, prompt, overwritten]);
+  }, [overwriteHandler, prompt, overwritten, setOverwritten]);
 
   const handleClear = useCallback(() => {
     onClear();
     setCopied(false);
-  }, [onClear]);
+  }, [onClear, setCopied]);
 
   return (
     <Overlay onClick={onClose}>
@@ -217,26 +215,27 @@ const PromptOutputPopup = ({
           {copied ? "コピーしました ✓" : "クリップボードにコピー"}
         </CopyButton>
 
-        {canSave && overwriteHandler && (
-          <OverwriteButton
-            overwritten={overwritten}
-            onClick={handleOverwrite}
-            disabled={!prompt || overwritten}
-            type="button"
-          >
-            {overwritten ? "上書き保存しました ✓" : "上書き保存"}
-          </OverwriteButton>
-        )}
-
         {canSave && (
-          <SaveButton
-            saved={saved}
-            onClick={handleSave}
-            disabled={!prompt || saved}
-            type="button"
-          >
-            {saved ? "保存しました ✓" : "お気に入りプロンプトに保存（新規）"}
-          </SaveButton>
+          <SaveButtonRow>
+            {overwriteHandler && (
+              <OverwriteButton
+                overwritten={overwritten}
+                onClick={handleOverwrite}
+                disabled={!prompt || overwritten}
+                type="button"
+              >
+                {overwritten ? "上書き ✓" : "上書き保存"}
+              </OverwriteButton>
+            )}
+            <SaveButton
+              saved={saved}
+              onClick={handleSave}
+              disabled={!prompt || saved}
+              type="button"
+            >
+              {saved ? "保存 ✓" : overwriteHandler ? "新規保存" : "お気に入りに保存"}
+            </SaveButton>
+          </SaveButtonRow>
         )}
 
         <ClearButton onClick={handleClear} type="button">
