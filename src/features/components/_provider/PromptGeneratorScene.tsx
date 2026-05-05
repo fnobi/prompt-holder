@@ -106,12 +106,13 @@ const PromptGeneratorScene = () => {
     if (!myId || !prompt) {
       return;
     }
+    const now = Date.now();
     const newId = await myPromptDataStore.addItem({
       userId: myId,
       data: {
         prompt: { subjectItems, subjectSelectedIds, selectedIds },
-        createdAt: Date.now(),
-        updatedAt: 0
+        createdAt: now,
+        updatedAt: now
       }
     });
     setMyPromptId(newId);
