@@ -133,7 +133,7 @@ const SaveButtonRow = styled.div({
 const useTimedFlag = (duration = 2000) => {
   const [flag, setFlag] = useState(false);
   useEffect(() => {
-    if (!flag) return;
+    if (!flag) {return;}
     const id = setTimeout(() => setFlag(false), duration);
     return () => clearTimeout(id);
   }, [flag, duration]);
@@ -164,18 +164,18 @@ const PromptOutputPopup = ({
   const [overwritten, setOverwritten] = useTimedFlag();
 
   const handleCopy = useCallback(() => {
-    if (!prompt) return;
+    if (!prompt) {return;}
     navigator.clipboard.writeText(prompt).then(() => setCopied(true));
   }, [prompt, setCopied]);
 
   const handleSave = useCallback(async () => {
-    if (!prompt || saved) return;
+    if (!prompt || saved) {return;}
     await saveHandler();
     setSaved(true);
   }, [saveHandler, prompt, saved, setSaved]);
 
   const handleOverwrite = useCallback(async () => {
-    if (!prompt || overwritten || !overwriteHandler) return;
+    if (!prompt || overwritten || !overwriteHandler) {return;}
     await overwriteHandler();
     setOverwritten(true);
   }, [overwriteHandler, prompt, overwritten, setOverwritten]);
