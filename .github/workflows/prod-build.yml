@@ -10,7 +10,7 @@ env:
   ACTIONS_BUILD_COMMAND: npm run build
   ACTIONS_BUILD_DIST: dist
   ACTIONS_LOCK_FILE: pnpm-lock.json
-  NEXT_PUBLIC_SITE_ORIGIN: https://prompt-holder-d7fd7.web.app
+  NEXT_PUBLIC_SITE_ORIGIN: https://prompt-holder.fnobi.com
   NEXT_PUBLIC_FIREBASE_API_KEY: "AIzaSyDT4w3saZtuiT7KOHm-P2znGrK_7awHF5s"
   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "prompt-holder-d7fd7.firebaseapp.com"
   NEXT_PUBLIC_FIREBASE_PROJECT_ID: "prompt-holder-d7fd7"
