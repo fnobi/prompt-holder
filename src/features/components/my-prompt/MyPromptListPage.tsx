@@ -159,6 +159,7 @@ const PromptItemCard = ({ id, data, onDelete }: PromptItemCardProps) => {
     state => state.setSubjectSelectedIds
   );
   const setSelectedIds = usePromptStore(state => state.setSelectedIds);
+  const setMyPromptId = usePromptStore(state => state.setMyPromptId);
 
   const labels = buildJapaneseLabels(data.prompt);
 
@@ -166,10 +167,13 @@ const PromptItemCard = ({ id, data, onDelete }: PromptItemCardProps) => {
     setSubjectItems(data.prompt.subjectItems);
     setSubjectSelectedIds(data.prompt.subjectSelectedIds);
     setSelectedIds(data.prompt.selectedIds);
+    setMyPromptId(id);
     router.push(PAGE_TOP.href);
   }, [
     data.prompt,
+    id,
     router,
+    setMyPromptId,
     setSelectedIds,
     setSubjectItems,
     setSubjectSelectedIds

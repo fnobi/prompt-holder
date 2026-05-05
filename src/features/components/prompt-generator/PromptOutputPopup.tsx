@@ -75,6 +75,34 @@ const ClearButton = styled.button(buttonReset, {
   }
 });
 
+const OverwriteButton = styled.button<{ overwritten: boolean }>(
+  buttonReset,
+  {
+    width: "100%",
+    padding: px(11),
+    borderRadius: px(8),
+    fontSize: px(14),
+    fontWeight: 600,
+    textAlign: "center",
+    marginTop: px(8),
+    transition: "all 0.15s ease"
+  },
+  ({ overwritten }) =>
+    overwritten
+      ? {
+          background: THEME_COLOR.SUCCESS,
+          color: THEME_COLOR.WHITE,
+          cursor: "default"
+        }
+      : {
+          background: THEME_COLOR.SURFACE,
+          color: THEME_COLOR.ACCENT,
+          border: `1.5px solid ${THEME_COLOR.ACCENT}`,
+          "&:hover:not(:disabled)": { background: THEME_COLOR.ACCENT_LIGHT },
+          "&:disabled": { opacity: 0.5, cursor: "default" }
+        }
+);
+
 const SaveButton = styled.button<{ saved: boolean }>(
   buttonReset,
   {
@@ -109,6 +137,7 @@ type PromptOutputPopupProps = {
   canSave: boolean;
   onClose: () => void;
   saveHandler: () => Promise<void>;
+  overwriteHandler?: () => Promise<void>;
   onClear: () => void;
 };
 
@@ -118,10 +147,12 @@ const PromptOutputPopup = ({
   canSave,
   onClose,
   saveHandler,
+  overwriteHandler,
   onClear
 }: PromptOutputPopupProps) => {
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [overwritten, setOverwritten] = useState(false);
 
   const handleCopy = useCallback(() => {
     if (!prompt) {
@@ -141,6 +172,15 @@ const PromptOutputPopup = ({
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }, [saveHandler, prompt, saved]);
+
+  const handleOverwrite = useCallback(async () => {
+    if (!prompt || overwritten || !overwriteHandler) {
+      return;
+    }
+    await overwriteHandler();
+    setOverwritten(true);
+    setTimeout(() => setOverwritten(false), 2000);
+  }, [overwriteHandler, prompt, overwritten]);
 
   const handleClear = useCallback(() => {
     onClear();
@@ -177,6 +217,17 @@ const PromptOutputPopup = ({
           {copied ? "コピーしました ✓" : "クリップボードにコピー"}
         </CopyButton>
 
+        {canSave && overwriteHandler && (
+          <OverwriteButton
+            overwritten={overwritten}
+            onClick={handleOverwrite}
+            disabled={!prompt || overwritten}
+            type="button"
+          >
+            {overwritten ? "上書き保存しました ✓" : "上書き保存"}
+          </OverwriteButton>
+        )}
+
         {canSave && (
           <SaveButton
             saved={saved}
@@ -184,7 +235,7 @@ const PromptOutputPopup = ({
             disabled={!prompt || saved}
             type="button"
           >
-            {saved ? "保存しました ✓" : "お気に入りに保存"}
+            {saved ? "保存しました ✓" : "お気に入りプロンプトに保存（新規）"}
           </SaveButton>
         )}
 

@@ -41,6 +41,8 @@ const PromptGeneratorScene = () => {
   );
   const toggleSelected = usePromptStore(state => state.toggleSelected);
   const clearAllStore = usePromptStore(state => state.clearAll);
+  const myPromptId = usePromptStore(state => state.myPromptId);
+  const setMyPromptId = usePromptStore(state => state.setMyPromptId);
 
   const { myId } = useAuthorizedUser();
 
@@ -104,14 +106,29 @@ const PromptGeneratorScene = () => {
     if (!myId || !prompt) {
       return;
     }
-    await myPromptDataStore.addItem({
+    const newId = await myPromptDataStore.addItem({
       userId: myId,
       data: {
         prompt: { subjectItems, subjectSelectedIds, selectedIds },
         createdAt: Date.now()
       }
     });
-  }, [myId, prompt, selectedIds, subjectItems, subjectSelectedIds]);
+    setMyPromptId(newId);
+  }, [myId, prompt, selectedIds, setMyPromptId, subjectItems, subjectSelectedIds]);
+
+  const handleOverwrite = useCallback(async () => {
+    if (!myId || !myPromptId || !prompt) {
+      return;
+    }
+    await myPromptDataStore.mergeItem({
+      userId: myId,
+      promptId: myPromptId,
+      data: {
+        prompt: { subjectItems, subjectSelectedIds, selectedIds },
+        updatedAt: Date.now()
+      }
+    });
+  }, [myId, myPromptId, prompt, selectedIds, subjectItems, subjectSelectedIds]);
 
   const selectedCount = selectedIds.length + subjectSelectedIds.length;
   const activeCategory = PROMPT_CATEGORIES.find(c => c.id === activeTab);
@@ -162,6 +179,7 @@ const PromptGeneratorScene = () => {
           selectedCount={selectedCount}
           canSave={!!myId}
           saveHandler={handleSave}
+          overwriteHandler={myPromptId ? handleOverwrite : undefined}
           onClear={clearAll}
           onClose={() => setPopupOpen(false)}
         />

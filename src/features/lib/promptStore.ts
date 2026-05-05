@@ -4,6 +4,8 @@ import { type SubjectItem } from "~/features/schema/PromptState";
 import type PromptState from "~/features/schema/PromptState";
 
 type PromptStore = PromptState & {
+  myPromptId: string | null;
+  setMyPromptId: (id: string | null) => void;
   setSubjectItems: (items: SubjectItem[]) => void;
   setSubjectSelectedIds: (ids: string[]) => void;
   setSelectedIds: (ids: string[]) => void;
@@ -19,6 +21,9 @@ const usePromptStore = create<PromptStore>(set => ({
   subjectItems: [],
   subjectSelectedIds: [],
   selectedIds: [],
+  myPromptId: null,
+
+  setMyPromptId: id => set({ myPromptId: id }),
 
   setSubjectItems: items => set({ subjectItems: items }),
   setSubjectSelectedIds: ids => set({ subjectSelectedIds: ids }),
@@ -66,7 +71,8 @@ const usePromptStore = create<PromptStore>(set => ({
     set({
       subjectItems: [],
       subjectSelectedIds: [],
-      selectedIds: []
+      selectedIds: [],
+      myPromptId: null
     })
 }));
 
