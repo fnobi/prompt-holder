@@ -1,8 +1,17 @@
 import { onCall } from "firebase-functions/v2/https";
+import { FieldValue } from "firebase-admin/firestore";
 import responseAppCallable from "@/local/responseAppCallable";
 import { getSecretParams, getSecretString } from "@/local/secret-manager";
 import { COMMON_CALLABLE_REGION } from "~/features/schema/AppCallableScheme";
 import AppError from "~/features/schema/AppError";
+import { firebaseFirestore } from "@/lib/firebase-app";
+
+const currentMonth = () => {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  return `${y}-${m}`;
+};
 
 export default onCall(
   {
@@ -30,6 +39,20 @@ export default onCall(
       const json = (await res.json()) as {
         translations: { text: string }[];
       };
+
+      const usageRef = firebaseFirestore()
+        .collection("profiles")
+        .doc(auth.uid)
+        .collection("translationUsage")
+        .doc(currentMonth());
+      await usageRef.set(
+        {
+          characterCount: FieldValue.increment(jaWord.length),
+          callCount: FieldValue.increment(1)
+        },
+        { merge: true }
+      );
+
       return {
         case: "ok",
         data: { enWord: json.translations[0].text }
