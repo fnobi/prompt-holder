@@ -1,10 +1,16 @@
 import { onCall } from "firebase-functions/v2/https";
-import { FieldValue } from "firebase-admin/firestore";
 import responseAppCallable from "@/local/responseAppCallable";
 import { getSecretParams, getSecretString } from "@/local/secret-manager";
 import { COMMON_CALLABLE_REGION } from "~/features/schema/AppCallableScheme";
 import AppError from "~/features/schema/AppError";
 import { firebaseFirestore } from "@/lib/firebase-app";
+import { ServerDataStoreAgent } from "@/lib/ServerDataStoreAgent";
+import { translationUsageDataStoreScheme } from "~/features/schema/app-data-store-scheme";
+
+const translationUsageAgent = new ServerDataStoreAgent(
+  firebaseFirestore,
+  translationUsageDataStoreScheme
+);
 
 const currentMonth = () => {
   const now = new Date();
@@ -40,17 +46,19 @@ export default onCall(
         translations: { text: string }[];
       };
 
-      const usageRef = firebaseFirestore()
-        .collection("profiles")
-        .doc(auth.uid)
-        .collection("translationUsage")
-        .doc(currentMonth());
-      await usageRef.set(
-        {
-          characterCount: FieldValue.increment(jaWord.length),
-          callCount: FieldValue.increment(1)
-        },
-        { merge: true }
+      const month = currentMonth();
+      await ServerDataStoreAgent.runTransaction(
+        firebaseFirestore,
+        ({ get }) => get(translationUsageAgent, { userId: auth.uid, month }),
+        (current, { set }) =>
+          set(translationUsageAgent, {
+            userId: auth.uid,
+            month,
+            data: {
+              characterCount: (current?.characterCount ?? 0) + jaWord.length,
+              callCount: (current?.callCount ?? 0) + 1
+            }
+          })
       );
 
       return {
